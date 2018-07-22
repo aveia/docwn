@@ -30,7 +30,9 @@ def rsplit(str, delimiter=None, max=-1):
 
 class SiteDownloader:
 
-    def __init__(self, url):
+    def __init__(self, url, out):
+
+        self.output = out
 
         if url[:7] == 'http://':
             self.scheme = 'http'
@@ -52,9 +54,9 @@ class SiteDownloader:
             error('unsupported url')
 
         self.downloaded = set()
-        shexec('rm -rf tmp-site')
-        os.mkdir('tmp-site')
-        os.chdir('tmp-site')
+        shexec('rm -rf ' + self.output)
+        os.mkdir(self.output)
+        os.chdir(self.output)
         self.root_path = os.getcwd()
 
     def get_root(self):
@@ -138,9 +140,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser('get site v0.1')
     parser.add_argument('-s', required=True, dest='url')
+    parser.add_argument('-o', required=False, dest='out', default='tmpsite')
 
     args = parser.parse_args()
 
-    downloader = SiteDownloader(args.url)
+    downloader = SiteDownloader(args.url, args.out)
     downloader.download()
 
