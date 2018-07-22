@@ -21,23 +21,16 @@ def blue(str):
 def error(msg):
     raise Error('{}: {}'.format(__file__, msg))
 
-def rsplit(str, delimiter=None, max=-1):
-    pieces = str[::-1].split(delimiter, max)
-    for x in range(0, len(pieces)):
-        pieces[x] = pieces[x][::-1]
-    pieces.reverse()
-    return pieces
-
 class SiteDownloader:
 
     def __init__(self, url, out):
 
         self.output = out
 
-        if url[:7] == 'http://':
+        if url.startswith('http://'):
             self.scheme = 'http'
             self.uri = url[7:]
-        elif url[:8] == 'https://':
+        elif url.startswith('https://'):
             self.scheme = 'https'
             self.uri = url[8:]
         else:
@@ -69,20 +62,16 @@ class SiteDownloader:
         cropped_url = url.replace(self.get_root(), '')
         print green('cropped {}'.format(cropped_url))
 
-        split = rsplit(cropped_url, '/', 1)
+        split = cropped_url.rsplit('/', 1)
 
-        if len(split) > 1:
+        if len(split) == 2:
             path, filename = split
             path += '/'
             shexec('mkdir -p {}'.format(path))
             os.chdir(path)
         elif len(split) == 1:
-            if split[0] == '':
-                path = ''
-                filename = 'index.html'
-            else:
-                path = ''
-                filename = split[0]
+            path = ''
+            filename = split[0] or 'index.html'
 
         retcode = shexec('wget {}'.format(url))
 
@@ -99,17 +88,16 @@ class SiteDownloader:
 
         return path, content
 
-
     def download(self):
 
-        stack = []
-        stack.append(self.get_root() + 'index.' + self.page_type)
+        to_download = set()
+        to_download.add(self.get_root() + 'index.' + self.page_type)
 
-        while (stack):
+        while to_download:
 
-            url = stack.pop()
-            url = rsplit(url, '#')[0]
-            url = rsplit(url, '?')[0]
+            url = to_download.pop()
+            url = url.rsplit('#', 1)[0]
+            url = url.rsplit('?', 1)[0]
 
             if url in self.downloaded:
                 print orange('already downloaded: ' + url)
@@ -123,22 +111,18 @@ class SiteDownloader:
             for m in re.finditer('(src|href)=[\'"](.+?)[\'"]', content):
                 href = m.group(2)
 
+                if href.startswith('http://') \
+                    or href.startswith('https://') \
+                    or href.startswith('mailto:') \
+                    or href.startswith('.'):
+                    print orange('ignored: ' + href)
+                    continue
+
                 print blue(href)
-                if href.startswith('mailto:'):
-                    print orange('  {} : ignored'.format(href))
-                    continue
-                elif href.startswith('http://') or href.startswith('https://'):
-                    print orange('  {} : ignored'.format(href))
-                    continue
-                elif href[:len(self.scheme)] == self.scheme:
-                    if href[:len(self.get_root())] == self.get_root():
-                        stack.append(href)
-                elif href[0] == '.':
-                    continue
-                else:
-                    new_url = '{}{}{}'.format(self.get_root(), path, href)
-                    if new_url not in self.downloaded:
-                        stack.append(new_url)
+                if not href.startswith(self.get_root()):
+                    href = '{}{}{}'.format(self.get_root(), path, href)
+
+                to_download.add(href)
 
         print 'done!'
 
@@ -152,4 +136,3 @@ if __name__ == '__main__':
 
     downloader = SiteDownloader(args.url, args.out)
     downloader.download()
-
