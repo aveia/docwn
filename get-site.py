@@ -128,7 +128,7 @@ class SiteDownloader:
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser('get site v0.2')
+    parser = argparse.ArgumentParser('get site v0.3')
     parser.add_argument('-s', required=True, dest='url')
     parser.add_argument('-o', required=False, dest='out', default='tmpsite')
 
