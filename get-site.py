@@ -133,6 +133,9 @@ class SiteDownloader:
                 if href.startswith('mailto:'):
                     print orange('  {} : ignored'.format(href))
                     continue
+                elif href.startswith('http://') or href.startswith('https://'):
+                    print orange('  {} : ignored'.format(href))
+                    continue
                 elif href[:len(self.scheme)] == self.scheme:
                     if href[:len(self.get_root())] == self.get_root():
                         stack.append(href)
