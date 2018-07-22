@@ -105,13 +105,7 @@ class SiteDownloader:
         stack = []
         stack.append(self.get_root() + 'index.' + self.page_type)
 
-        dl = 0
-        max_dl = 50
-
         while (stack):
-
-            if dl >= max_dl:
-                break
 
             url = stack.pop()
             url = rsplit(url, '#')[0]
@@ -146,10 +140,7 @@ class SiteDownloader:
                     if new_url not in self.downloaded:
                         stack.append(new_url)
 
-            dl += 1
-
         print 'done!'
-
 
 if __name__ == '__main__':
 
