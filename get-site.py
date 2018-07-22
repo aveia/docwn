@@ -101,7 +101,7 @@ class SiteDownloader:
         stack.append(self.get_root() + 'index.' + self.page_type)
 
         dl = 0
-        max_dl = 20
+        max_dl = 50
 
         while (stack):
 
@@ -122,11 +122,14 @@ class SiteDownloader:
                 href = m.group(2)
 
                 print blue(href)
-                if href[:len(self.scheme)] == self.scheme:
+                if href.startswith('mailto:'):
+                    print orange('  {} : ignored'.format(href))
+                    continue
+                elif href[:len(self.scheme)] == self.scheme:
                     if href[:len(self.get_root())] == self.get_root():
                         stack.append(href)
                 elif href[0] == '.':
-                    pass
+                    continue
                 else:
                     new_url = '{}{}{}'.format(self.get_root(), path, href)
                     if new_url not in self.downloaded:
