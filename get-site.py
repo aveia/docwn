@@ -113,7 +113,7 @@ class SiteDownloader:
             url = rsplit(url, '?')[0]
 
             if url in self.downloaded:
-                print orange('downloaded: ' + url)
+                print orange('already downloaded: ' + url)
                 continue
 
             path, content = self.download_file(url)
