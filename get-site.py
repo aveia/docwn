@@ -10,13 +10,13 @@ def shexec(cmd):
     return os.system(cmd)
 
 def green(str):
-    print '\033[0;32m{}\033[0;0m'.format(str)
+    return '\033[0;32m{}\033[0;0m'.format(str)
 
 def orange(str):
-    print '\033[0;33m{}\033[0;0m'.format(str)
+    return '\033[0;33m{}\033[0;0m'.format(str)
 
 def blue(str):
-    print '\033[0;34m{}\033[0;0m'.format(str)
+    return '\033[0;34m{}\033[0;0m'.format(str)
 
 def error(msg):
     raise Error('{}: {}'.format(__file__, msg))
@@ -62,10 +62,10 @@ class SiteDownloader:
 
     def download_file(self, url):
 
-        green('downloading: ' + url)
+        print green('downloading: ' + url)
 
         cropped_url = url.replace(self.get_root(), '')
-        green('cropped {}'.format(cropped_url))
+        print green('cropped {}'.format(cropped_url))
 
         split = rsplit(cropped_url, '/', 1)
 
@@ -111,14 +111,14 @@ class SiteDownloader:
             url = rsplit(url, '?')[0]
 
             if url in self.downloaded:
-                orange('downloaded: ' + url)
+                print orange('downloaded: ' + url)
                 continue
 
             path, content = self.download_file(url)
 
             for m in re.finditer('href=[\'"](.+?)[\'"]', content):
                 href = m.group(1)
-                blue(href)
+                print blue(href)
                 if href[:len(self.scheme)] == self.scheme:
                     if href[:len(self.get_root())] == self.get_root():
                         stack.append(href)
