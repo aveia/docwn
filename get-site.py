@@ -98,7 +98,7 @@ class SiteDownloader:
     def download(self):
 
         stack = []
-        stack.append(self.get_root())
+        stack.append(self.get_root() + 'index.' + self.page_type)
 
         dl = 0
         max_dl = 20
