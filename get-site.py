@@ -84,8 +84,13 @@ class SiteDownloader:
                 path = ''
                 filename = split[0]
 
-        shexec('wget {}'.format(url))
+        retcode = shexec('wget {}'.format(url))
+
         self.downloaded.add(url)
+
+        if retcode:
+            os.chdir(self.root_path)
+            return None, None
 
         with open(filename) as f:
             content = f.read()
@@ -117,6 +122,9 @@ class SiteDownloader:
                 continue
 
             path, content = self.download_file(url)
+
+            if not content:
+                continue
 
             for m in re.finditer('(src|href)=[\'"](.+?)[\'"]', content):
                 href = m.group(2)
