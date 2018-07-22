@@ -118,8 +118,9 @@ class SiteDownloader:
 
             path, content = self.download_file(url)
 
-            for m in re.finditer('href=[\'"](.+?)[\'"]', content):
-                href = m.group(1)
+            for m in re.finditer('(src|href)=[\'"](.+?)[\'"]', content):
+                href = m.group(2)
+
                 print blue(href)
                 if href[:len(self.scheme)] == self.scheme:
                     if href[:len(self.get_root())] == self.get_root():
