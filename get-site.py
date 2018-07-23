@@ -111,10 +111,11 @@ class SiteDownloader:
             for m in re.finditer('(src|href)=[\'"](.+?)[\'"]', content):
                 href = m.group(2)
 
-                if href.startswith('http://') \
-                    or href.startswith('https://') \
-                    or href.startswith('mailto:') \
-                    or href.startswith('.'):
+                if not href.startswith(self.get_root()) \
+                    and (href.startswith('http://') \
+                        or href.startswith('https://') \
+                        or href.startswith('mailto:') \
+                        or href.startswith('.')):
                     print orange('ignored: ' + href)
                     continue
 
