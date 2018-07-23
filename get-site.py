@@ -5,9 +5,8 @@ import os
 import re
 import sys
 
-def shexec(cmd):
-    print '\033[0;31m{}\033[0;0m'.format(cmd)
-    return os.system(cmd)
+def red(str):
+    return '\033[0;31m{}\033[0;0m'.format(str)
 
 def green(str):
     return '\033[0;32m{}\033[0;0m'.format(str)
@@ -20,6 +19,10 @@ def blue(str):
 
 def error(msg):
     raise Error('{}: {}'.format(__file__, msg))
+
+def shexec(cmd):
+    print red(cmd)
+    return os.system(cmd)
 
 class SiteDownloader:
 
@@ -107,6 +110,8 @@ class SiteDownloader:
 
             path, content = self.download_file(url)
 
+            print red('number of remaining files: ' + str(len(to_download)))
+
             if not content:
                 continue
 
@@ -118,14 +123,16 @@ class SiteDownloader:
                 if not href.startswith(self.get_root()) \
                     and (href.startswith('http://') \
                         or href.startswith('https://') \
-                        or href.startswith('mailto:') \
-                        or href.startswith('.')):
+                        or href.startswith('mailto:')):
                     print orange('ignored: ' + href)
                     continue
 
                 print blue(href)
                 if not href.startswith(self.get_root()):
                     href = '{}{}{}'.format(self.get_root(), path, href)
+
+                while re.search(r'/[^/]+/\.\./', href):
+                    href = re.sub(r'/[^/]+/\.\./', '/', href)
 
                 to_download.add(href)
 
