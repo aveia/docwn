@@ -67,15 +67,15 @@ class SiteDownloader:
         split = cropped_url.rsplit('/', 1)
 
         if len(split) == 2:
-            path, filename = split
-            path += '/'
+            path = split[0] + '/'
+            filename = split[1] or 'index.html'
             shexec('mkdir -p {}'.format(path))
             os.chdir(path)
         elif len(split) == 1:
             path = ''
             filename = split[0] or 'index.html'
 
-        retcode = shexec('wget {}'.format(url))
+        retcode = shexec('wget -O "{}" "{}"'.format(filename, url))
 
         self.downloaded.add(url)
 
