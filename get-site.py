@@ -110,7 +110,9 @@ class SiteDownloader:
             if not content:
                 continue
 
-            for m in re.finditer('(src|href)=[\'"](.+?)[\'"]', content):
+            for m in \
+                re.finditer('(src|href|SRC|HREF)=[\'"](.+?)[\'"]', content):
+
                 href = m.group(2)
 
                 if not href.startswith(self.get_root()) \
