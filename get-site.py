@@ -39,6 +39,8 @@ class SiteDownloader:
         if url[-1] == '/':
             if os.system('curl -f {}index.html'.format(url)) == 0:
                 self.page_type = 'html'
+            elif os.system('curl -f {}index.htm'.format(url)) == 0:
+                self.page_type = 'htm'
             elif os.system('curl -f {}index.php'.format(url)) == 0:
                 self.page_type = 'php'
             else:
