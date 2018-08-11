@@ -18,7 +18,7 @@ def blue(str):
     return '\033[0;34m{}\033[0;0m'.format(str)
 
 def error(msg):
-    raise Error('{}: {}'.format(__file__, msg))
+    raise RuntimeError('{}: {}'.format(__file__, msg))
 
 def shexec(cmd):
     print red(cmd)
