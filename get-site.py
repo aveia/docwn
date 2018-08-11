@@ -4,7 +4,6 @@
 import argparse
 import os
 import re
-import sys
 
 def red(str):
     return '\033[0;31m{}\033[0;0m'.format(str)
