@@ -73,16 +73,19 @@ class SiteDownloader:
             path = split[0] + '/'
             filename = split[1] or 'index.html'
             shexec('mkdir -p {}'.format(path))
-            os.chdir(path)
         elif len(split) == 1:
             path = ''
             filename = split[0] or 'index.html'
+
+        if path:
+            os.chdir(path)
 
         retcode = shexec('wget -O "{}" "{}"'.format(filename, url))
 
         self.downloaded.add(url)
 
         if retcode:
+            print red('failed do download: ' + url)
             os.chdir(self.root_path)
             return None, None
 
@@ -98,7 +101,11 @@ class SiteDownloader:
         to_download = set()
         to_download.add(self.get_root() + 'index.' + self.page_type)
 
+        errors = 0
+
         while to_download:
+
+            print red('number of remaining files: ' + str(len(to_download)))
 
             url = to_download.pop()
             url = url.rsplit('#', 1)[0]
@@ -110,9 +117,8 @@ class SiteDownloader:
 
             path, content = self.download_file(url)
 
-            print red('number of remaining files: ' + str(len(to_download)))
-
-            if not content:
+            if content is None:
+                errors += 1
                 continue
 
             for m in \
@@ -136,7 +142,7 @@ class SiteDownloader:
 
                 to_download.add(href)
 
-        print 'done!'
+        print green('done! no. of errors: ' + str(errors))
 
 if __name__ == '__main__':
 
