@@ -5,17 +5,17 @@ import argparse
 import os
 import re
 
-def red(str):
-    return '\033[0;31m{}\033[0;0m'.format(str)
+def red(text):
+    return '\033[0;31m{}\033[0;0m'.format(text)
 
-def green(str):
-    return '\033[0;32m{}\033[0;0m'.format(str)
+def green(text):
+    return '\033[0;32m{}\033[0;0m'.format(text)
 
-def orange(str):
-    return '\033[0;33m{}\033[0;0m'.format(str)
+def orange(text):
+    return '\033[0;33m{}\033[0;0m'.format(text)
 
-def blue(str):
-    return '\033[0;34m{}\033[0;0m'.format(str)
+def blue(text):
+    return '\033[0;34m{}\033[0;0m'.format(text)
 
 def error(msg):
     raise RuntimeError('{}: {}'.format(__file__, msg))
@@ -24,7 +24,7 @@ def shexec(cmd):
     print red(cmd)
     return os.system(cmd)
 
-class SiteDownloader:
+class SiteDownloader(object):
 
     def __init__(self, url, out):
 
