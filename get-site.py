@@ -4,6 +4,7 @@
 import argparse
 import os
 import re
+import sys
 
 def red(text):
     return '\033[0;31m{}\033[0;0m'.format(text)
@@ -17,11 +18,15 @@ def orange(text):
 def blue(text):
     return '\033[0;34m{}\033[0;0m'.format(text)
 
+def pink(text):
+    return '\033[0;35m{}\033[0;0m'.format(text)
+
 def error(msg):
-    raise RuntimeError('{}: {}'.format(__file__, msg))
+    print(red('{}: {}'.format(__file__, msg)))
+    sys.exit(1)
 
 def shexec(cmd):
-    print(red(cmd))
+    print(orange('shexec: ' + cmd))
     return os.system(cmd)
 
 class SiteDownloader(object):
@@ -93,7 +98,7 @@ class SiteDownloader(object):
 
         while to_download:
 
-            print(red('number of remaining files: ' + str(len(to_download))))
+            print(pink('number of remaining files: ' + str(len(to_download))))
 
             url = to_download.pop()
             url = url.rsplit('#', 1)[0]
@@ -109,19 +114,23 @@ class SiteDownloader(object):
                 errors += 1
                 continue
 
-            for m in \
+            new_files = set()
+            ignored = set()
+
+            for match in \
                 re.finditer(r'(src|href|SRC|HREF)=[\'"](.+?)[\'"]', content):
 
-                href = m.group(2)
+                href = match.group(2)
 
                 if not href.startswith(self.get_root()) \
                     and (href.startswith('http://') \
                         or href.startswith('https://') \
                         or href.startswith('mailto:')):
-                    print(orange('ignored: ' + href))
+                    ignored.add(href)
                     continue
 
-                print(blue(href))
+                new_files.add(href)
+
                 if not href.startswith(self.get_root()):
                     href = '{}{}{}'.format(self.get_root(), path, href)
 
@@ -129,6 +138,12 @@ class SiteDownloader(object):
                     href = re.sub(r'/[^/]+/\.\./', '/', href)
 
                 to_download.add(href)
+
+            if ignored:
+                print(orange('ignored: ' + ' | '.join(ignored)))
+
+            if new_files:
+                print(blue('new files: ' + ' | '.join(new_files)))
 
         print(green('done! no. of errors: ' + str(errors)))
 
