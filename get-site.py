@@ -59,7 +59,7 @@ class SiteDownloader(object):
         print(green('downloading: ' + url))
 
         cropped_url = url.replace(self.get_root(), '')
-        print(green('cropped {}'.format(cropped_url)))
+        print(green('cropped: {}'.format(cropped_url)))
 
         split = cropped_url.rsplit('/', 1)
 
@@ -132,7 +132,8 @@ class SiteDownloader(object):
                 if not href.startswith(self.get_root()) \
                     and (href.startswith('http://') \
                         or href.startswith('https://') \
-                        or href.startswith('mailto:')):
+                        or href.startswith('mailto:') \
+                        or href.startswith('/')):
                     ignored.add(href)
                     continue
 
