@@ -30,12 +30,9 @@ class SiteDownloader(object):
 
         self.output = out
 
-        if url.startswith('http://'):
-            self.scheme = 'http'
-            self.uri = url[7:]
-        elif url.startswith('https://'):
-            self.scheme = 'https'
-            self.uri = url[8:]
+        url_split = [x for x in re.split(r'^(https?)://', url) if x]
+        if len(url_split) == 2:
+            self.scheme, self.uri = url_split
         else:
             error('unrecognized url scheme')
 
@@ -113,7 +110,7 @@ class SiteDownloader(object):
                 continue
 
             for m in \
-                re.finditer('(src|href|SRC|HREF)=[\'"](.+?)[\'"]', content):
+                re.finditer(r'(src|href|SRC|HREF)=[\'"](.+?)[\'"]', content):
 
                 href = m.group(2)
 
