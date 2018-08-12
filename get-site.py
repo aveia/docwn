@@ -21,7 +21,7 @@ def error(msg):
     raise RuntimeError('{}: {}'.format(__file__, msg))
 
 def shexec(cmd):
-    print red(cmd)
+    print(red(cmd))
     return os.system(cmd)
 
 class SiteDownloader(object):
@@ -53,10 +53,10 @@ class SiteDownloader(object):
 
     def download_file(self, url):
 
-        print green('downloading: ' + url)
+        print(green('downloading: ' + url))
 
         cropped_url = url.replace(self.get_root(), '')
-        print green('cropped {}'.format(cropped_url))
+        print(green('cropped {}'.format(cropped_url)))
 
         split = cropped_url.rsplit('/', 1)
 
@@ -76,7 +76,7 @@ class SiteDownloader(object):
         self.downloaded.add(url)
 
         if retcode:
-            print red('failed do download: ' + url)
+            print(red('failed do download: ' + url))
             os.chdir(self.root_path)
             return None, None
 
@@ -96,14 +96,14 @@ class SiteDownloader(object):
 
         while to_download:
 
-            print red('number of remaining files: ' + str(len(to_download)))
+            print(red('number of remaining files: ' + str(len(to_download))))
 
             url = to_download.pop()
             url = url.rsplit('#', 1)[0]
             url = url.rsplit('?', 1)[0]
 
             if url in self.downloaded:
-                print orange('already downloaded: ' + url)
+                print(orange('already downloaded: ' + url))
                 continue
 
             path, content = self.download_file(url)
@@ -121,10 +121,10 @@ class SiteDownloader(object):
                     and (href.startswith('http://') \
                         or href.startswith('https://') \
                         or href.startswith('mailto:')):
-                    print orange('ignored: ' + href)
+                    print(orange('ignored: ' + href))
                     continue
 
-                print blue(href)
+                print(blue(href))
                 if not href.startswith(self.get_root()):
                     href = '{}{}{}'.format(self.get_root(), path, href)
 
@@ -133,7 +133,7 @@ class SiteDownloader(object):
 
                 to_download.add(href)
 
-        print green('done! no. of errors: ' + str(errors))
+        print(green('done! no. of errors: ' + str(errors)))
 
 if __name__ == '__main__':
 
