@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 import argparse
+import codecs
 import os
 import re
 import sys
@@ -82,8 +83,14 @@ class SiteDownloader(object):
             os.chdir(self.root_path)
             return None, None
 
-        with open(filename) as f:
-            content = f.read()
+        content = ''
+        for e in ['utf-8', 'latin1']:
+            try:
+                with codecs.open(filename, encoding=e) as f:
+                    content = f.read()
+                break
+            except:
+                pass
 
         os.chdir(self.root_path)
 
