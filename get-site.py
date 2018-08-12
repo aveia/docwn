@@ -39,16 +39,7 @@ class SiteDownloader(object):
         else:
             error('unrecognized url scheme')
 
-        if url[-1] == '/':
-            if os.system('curl -f {}index.html'.format(url)) == 0:
-                self.page_type = 'html'
-            elif os.system('curl -f {}index.htm'.format(url)) == 0:
-                self.page_type = 'htm'
-            elif os.system('curl -f {}index.php'.format(url)) == 0:
-                self.page_type = 'php'
-            else:
-                error('unrecognized page type')
-        else:
+        if url[-1] != '/':
             error('unsupported url')
 
         self.downloaded = set()
@@ -99,7 +90,7 @@ class SiteDownloader(object):
     def download(self):
 
         to_download = set()
-        to_download.add(self.get_root() + 'index.' + self.page_type)
+        to_download.add(self.get_root())
 
         errors = 0
 
