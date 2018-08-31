@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 
+from __future__ import print_function
 import argparse
 import codecs
 import os
@@ -28,73 +29,97 @@ def error(msg):
 
 def shexec(cmd):
     print(orange('shexec: ' + cmd))
-    return os.system(cmd)
+    retcode = os.system(cmd)
+    while retcode > 255 and not retcode & 255:
+        retcode = (retcode >> 8) & 255
+    return retcode & 255
+
+def mkdir(path):
+    if not os.path.isdir(path):
+        shexec('mkdir -p "{}"'.format(path))
 
 class SiteDownloader(object):
 
-    def __init__(self, url, out):
+    def __init__(self, url, output):
 
-        self.output = out
+        self.output = output.rstrip('/') + '/'
 
         url_split = [x for x in re.split(r'^(https?)://', url) if x]
+        print(url_split)
         if len(url_split) == 2:
-            self.scheme, self.uri = url_split
+            self.scheme, uri = url_split
         else:
             error('unrecognized url scheme')
 
-        if url[-1] != '/':
-            error('unsupported url')
+        uri_split = uri.split('/', 1)
+        self.domain = uri_split[0]
+        path = '/' + uri_split[1] if len(uri_split) == 2 else '/'
+
+        self.root_path = path.rsplit('/', 1)[0] + '/'
+
+        shexec('rm -rf "{}"'.format(self.output))
+        mkdir(self.output)
+        self.local_root_path = os.getcwd()
 
         self.downloaded = set()
-        shexec('rm -rf ' + self.output)
-        os.mkdir(self.output)
-        os.chdir(self.output)
-        self.root_path = os.getcwd()
+        self.to_download = set()
+
+        self.to_download.add(self.get_root())
 
     def get_root(self):
-        return '{}://{}'.format(self.scheme, self.uri)
+        return '{}://{}{}'.format(self.scheme, self.domain, self.root_path)
 
     def download_file(self, url):
 
+        if re.match(r'^{}'.format(self.get_root()), url):
+            filepath = url.replace(self.get_root(), '', 1)
+        else:
+            print(red('won\'t download: ' + url))
+            return None, None
+
         print(green('downloading: ' + url))
 
-        cropped_url = url.replace(self.get_root(), '')
-        print(green('cropped: {}'.format(cropped_url)))
+        split = filepath.rsplit('/', 1)
+        path = split[0] + '/' if len(split) == 2 else ''
+        filename = split[-1] or 'index.html'
 
-        split = cropped_url.rsplit('/', 1)
+        dirpath = self.output + path
+        mkdir(dirpath)
 
-        if len(split) == 2:
-            path = split[0] + '/'
-            filename = split[1] or 'index.html'
-            shexec('mkdir -p {}'.format(path))
-        elif len(split) == 1:
-            path = ''
-            filename = split[0] or 'index.html'
+        local_filepath = dirpath + filename
 
-        if path:
-            os.chdir(path)
-
-        retcode = shexec('wget -O "{}" "{}"'.format(filename, url))
+        retcode = shexec('wget --no-verbose -O '
+            '"{}" "{}"'.format(local_filepath, url))
 
         self.downloaded.add(url)
 
+        if retcode in [2, 130]:
+            error('aborted!')
+
         if retcode:
             print(red('failed do download: ' + url))
-            os.chdir(self.root_path)
             return None, None
 
         content = ''
-        for e in ['utf-8', 'latin1']:
+        for e in ['utf-8', 'latin-1', 'cp1252', 'cp1250']:
             try:
-                with codecs.open(filename, encoding=e) as f:
+                with codecs.open(local_filepath, encoding=e) as f:
                     content = f.read()
                 break
+            except IOError:
+                print(red('failed do open: ' + local_filepath))
+                return None, None
             except:
                 pass
 
-        os.chdir(self.root_path)
-
         return path, content
+
+    def clean_up(self, url):
+        url = url.rsplit('#', 1)[0]
+        url = url.rsplit('?', 1)[0]
+        while re.search(r'/[^/]+/\.\./', url):
+            url = re.sub(r'/[^/]+/\.\./', '/', url)
+        return url
 
     def download(self):
 
@@ -105,20 +130,16 @@ class SiteDownloader(object):
 
         while to_download:
 
-            print(pink('number of remaining files: ' + str(len(to_download))))
+            print(pink('number of remaining files: ' \
+                '{}\n'.format(len(to_download))))
 
             url = to_download.pop()
-            url = url.rsplit('#', 1)[0]
-            url = url.rsplit('?', 1)[0]
-
-            if url in self.downloaded:
-                print(orange('already downloaded: ' + url))
-                continue
 
             path, content = self.download_file(url)
 
             if content is None:
                 errors += 1
+                print()
                 continue
 
             new_files = set()
@@ -129,29 +150,31 @@ class SiteDownloader(object):
 
                 href = match.group(2)
 
-                if not href.startswith(self.get_root()) \
-                    and (href.startswith('http://') \
-                        or href.startswith('https://') \
-                        or href.startswith('mailto:') \
-                        or href.startswith('/')):
+                if href.startswith('mailto:'):
                     ignored.add(href)
                     continue
 
-                new_files.add(href)
-
-                if not href.startswith(self.get_root()):
+                if href.startswith('/'):
+                    href = '{}://{}{}'.format(self.scheme, self.domain, href)
+                elif re.match(r'^[a-z]+://', href):
+                    pass
+                elif not href.startswith(self.get_root()):
                     href = '{}{}{}'.format(self.get_root(), path, href)
 
-                while re.search(r'/[^/]+/\.\./', href):
-                    href = re.sub(r'/[^/]+/\.\./', '/', href)
+                href = self.clean_up(href)
 
-                to_download.add(href)
+                if href not in self.downloaded \
+                    and href not in to_download:
+                    to_download.add(href)
+                    new_files.add(href.rsplit('/')[-1])
 
             if ignored:
                 print(orange('ignored: ' + ' | '.join(ignored)))
 
             if new_files:
                 print(blue('new files: ' + ' | '.join(new_files)))
+
+            print()
 
         print(green('done! no. of errors: ' + str(errors)))
 
