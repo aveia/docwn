@@ -1,9 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
 from __future__ import print_function
 import argparse
 import codecs
+import json
 import os
 import re
 import sys
@@ -42,6 +43,7 @@ class SiteDownloader(object):
 
     def __init__(self, url, output):
 
+        self.input_url = url
         self.output = output.rstrip('/') + '/'
 
         url_split = [x for x in re.split(r'^(https?)://', url) if x]
@@ -65,6 +67,16 @@ class SiteDownloader(object):
         self.to_download = set()
 
         self.to_download.add(self.get_root())
+
+    def write_info_file(self):
+        with open(self.output + 'docwn-info.json', 'w') as f:
+            info = {
+                'input_url': self.input_url,
+                'root': self.get_root(),
+                'output_dir': self.output,
+                'downloaded_files': list(self.downloaded),
+            }
+            print(json.dumps(info), file=f)
 
     def get_root(self):
         return '{}://{}{}'.format(self.scheme, self.domain, self.root_path)
@@ -119,6 +131,7 @@ class SiteDownloader(object):
         url = url.rsplit('?', 1)[0]
         while re.search(r'/[^/]+/\.\./', url):
             url = re.sub(r'/[^/]+/\.\./', '/', url)
+        url = url.replace('./', '')
         return url
 
     def download(self):
@@ -146,9 +159,9 @@ class SiteDownloader(object):
             ignored = set()
 
             for match in \
-                re.finditer(r'(src|href|SRC|HREF)=[\'"](.+?)[\'"]', content):
+                re.finditer(r'(src|href)\s*=\s*[\'"](.*?)[\'"]', content, re.I):
 
-                href = match.group(2)
+                href = match.group(2).strip()
 
                 if href.startswith('mailto:'):
                     ignored.add(href)
@@ -163,8 +176,8 @@ class SiteDownloader(object):
 
                 href = self.clean_up(href)
 
-                if href not in self.downloaded \
-                    and href not in to_download:
+                if href and href not in self.downloaded \
+                        and href not in to_download:
                     to_download.add(href)
                     new_files.add(href.rsplit('/')[-1])
 
@@ -176,13 +189,15 @@ class SiteDownloader(object):
 
             print()
 
+        self.write_info_file()
+
         print(green('done! no. of errors: ' + str(errors)))
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser('docwn v0.4')
-    parser.add_argument('-s', required=True, dest='url')
-    parser.add_argument('-o', required=False, dest='out', default='tmpsite')
+    parser = argparse.ArgumentParser('docwn v0.5')
+    parser.add_argument(dest='url')
+    parser.add_argument('-o', required=True, dest='out')
 
     args = parser.parse_args()
 
